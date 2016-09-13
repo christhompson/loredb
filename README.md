@@ -20,7 +20,7 @@ Then, import the lore:
 
     positional arguments:
     author
-    lore        blob of lore to save```
+    lore        blob of lore to save
 
 You can pass the lore either in quotes, or as plain text.
 add-lore.py will try to capture all of the remaining arguments as lore.
