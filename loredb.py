@@ -5,6 +5,7 @@
 import argparse
 import datetime
 import csv
+import sys
 from dateutil import parser
 from peewee import peewee
 
@@ -30,10 +31,8 @@ def main():
     lore_file = 'lore.db'
     db.init(lore_file)
 
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description='Handle your lore')
     subparsers = parser.add_subparsers(title='subcommands',
-                                       description='valid subcommands',
-                                       help='additional help',
                                        dest='command')
 
     add_parser = subparsers.add_parser("add")
@@ -67,16 +66,20 @@ def main():
 
     if args.command == "add":
         add(db, args)
-    if args.command == "new":
+    elif args.command == "new":
         new(db, args)
-    if args.command == "dump":
+    elif args.command == "dump":
         dump(db, args)
-    if args.command == "search":
+    elif args.command == "search":
         search(db, args)
-    if args.command == "import":
+    elif args.command == "import":
         import_lore(db, args)
-    if args.command == "random":
+    elif args.command == "random":
         random(db, args)
+    else:
+        parser.print_help()
+        sys.exit(1)
+    sys.exit(0)
 
 
 def add(db, args):
