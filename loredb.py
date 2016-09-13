@@ -59,9 +59,8 @@ def main():
     import_parser.add_argument('old_lore', help="csv file of old lore")
 
     random_parser = subparsers.add_parser("random")
-    random_parser.add_argument("pattern",
-                               help="plain text pattern to filter lore on",
-                               default="")
+    random_parser.add_argument("pattern", nargs='*',
+                               help="plain text pattern to filter lore on")
 
     # Parse the args and call whatever function was selected
     args = parser.parse_args()
@@ -146,8 +145,9 @@ def import_lore(db, args):
 
 
 def random(db, args):
+    pattern = ' '.join(args.pattern)
     lore = Lore.select().where(
-        Lore.lore.contains(args.pattern)).order_by(peewee.fn.Random()).limit(1)
+        Lore.lore.contains(pattern)).order_by(peewee.fn.Random()).limit(1)
     for l in lore:
         print(l, '\n')
 
