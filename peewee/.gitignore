@@ -1,0 +1,10 @@
+*.pyc
+build
+prof/
+playhouse/*.c
+playhouse/*.h
+playhouse/*.so
+playhouse/tests/peewee_test.db
+.idea/
+MANIFEST
+peewee_test.db
