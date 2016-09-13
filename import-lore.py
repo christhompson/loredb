@@ -7,6 +7,18 @@ from peewee import peewee
 db = peewee.SqliteDatabase(None)
 
 
+class BaseModel(peewee.Model):
+    class Meta:
+        database = db
+
+
+class Lore(BaseModel):
+    time = peewee.DateTimeField(null=True, index=True)
+    author = peewee.CharField(null=True, index=True)
+    lore = peewee.CharField()
+    rating = peewee.FloatField()
+
+
 def main():
     import argparse
     argparser = argparse.ArgumentParser()
