@@ -41,7 +41,8 @@ def main():
 
     db.begin()
     # Check to see if lore already exists (based on author/lore match)
-    matches = Lore.select().where(Lore.author == author and Lore.lore == lore).count()
+    matches = Lore.select().where(
+        Lore.author == author and Lore.lore == lore).count()
     if matches == 0:
         l = Lore.create(time=t, author=author, lore=loretxt, rating=0)
         print(l)
