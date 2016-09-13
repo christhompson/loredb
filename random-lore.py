@@ -6,7 +6,6 @@ import sys
 import argparse
 import datetime
 from peewee import peewee
-from loremodels import Lore
 
 db = peewee.SqliteDatabase(None)
 

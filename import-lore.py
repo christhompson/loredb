@@ -3,7 +3,6 @@
 import csv
 from dateutil import parser
 from peewee import peewee
-from loremodels import Lore
 
 db = peewee.SqliteDatabase(None)
 

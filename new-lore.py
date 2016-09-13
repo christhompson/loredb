@@ -4,7 +4,6 @@
 
 import argparse
 from peewee import peewee
-# from loremodels import Lore
 
 db = peewee.SqliteDatabase(None)
 
