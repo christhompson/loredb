@@ -7,7 +7,7 @@ import datetime
 import csv
 import sys
 from dateutil import parser
-from peewee import peewee
+import peewee
 
 db = peewee.SqliteDatabase(None)
 
