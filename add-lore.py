@@ -2,7 +2,7 @@
 
 import argparse
 import datetime
-from peewee import peewee
+import peewee
 
 db = peewee.SqliteDatabase(None)
 
