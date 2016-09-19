@@ -6,6 +6,7 @@ Lore funcionality is split into a set of subcommands:
 
  - `add`
  - `new`
+ - `top`
  - `dump`
  - `search`
  - `import`
