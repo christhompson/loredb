@@ -41,6 +41,12 @@ Then, import the lore:
 
 By default will show then last 10 pieces of lore. `-n` specifies how many pieces to return.
 
+`loredb top [-h] [-n NUM]`
+
+Will show a list of the top loremasters, and the count of their lore.
+By default will show the top 10.
+`-n` specifies the limit on the number of loremasters.
+
 `loredb.py random [pattern]`
 
 Will show one random piece of lore, optionally matching `pattern`.
