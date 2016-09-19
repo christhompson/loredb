@@ -61,6 +61,9 @@ def main():
     random_parser.add_argument("pattern", nargs='*',
                                help="plain text pattern to filter lore on")
 
+    top_parser = subparsers.add_parser("top")
+    top_parser.add_argument('-n', '--num', help='limit number of loremasters',
+                            type=int, default=10)
     # Parse the args and call whatever function was selected
     args = parser.parse_args()
 
@@ -76,6 +79,8 @@ def main():
         import_lore(db, args)
     elif args.command == "random":
         random(db, args)
+    elif args.command == "top":
+        top(db, args)
     else:
         parser.print_help()
         sys.exit(1)
@@ -153,6 +158,16 @@ def random(db, args):
         Lore.lore.contains(pattern)).order_by(peewee.fn.Random()).limit(1)
     for l in lore:
         print(l, '\n')
+
+
+def top(db, args):
+    lores = Lore.select(Lore.author, peewee.fn.Count(Lore.id).alias('count')).group_by(Lore.author).order_by(peewee.fn.Count(Lore.id).desc()).limit(args.num)
+
+    col_size = max(len(l.author) for l in lores)
+    for lore in lores:
+        if lore.author == "":
+            lore.author = "[blank]"
+        print(lore.author.ljust(col_size), '\t', lore.count)
 
 
 if __name__ == "__main__":
