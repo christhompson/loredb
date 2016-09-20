@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 
-# loredb commands
+'''loredb.py
+
+A tool for managing and querying a database of lore.
+'''
 
 import argparse
 import datetime
@@ -9,12 +12,10 @@ import sys
 from dateutil import parser
 import peewee
 
-db = peewee.SqliteDatabase(None)
-
 
 class BaseModel(peewee.Model):
     class Meta:
-        database = db
+        database = peewee.SqliteDatabase(None)
 
 
 class Lore(BaseModel):
@@ -29,11 +30,12 @@ class Lore(BaseModel):
 
 def main():
     lore_file = 'lore.db'
+    db = BaseModel._meta.database
     db.init(lore_file)
 
-    parser = argparse.ArgumentParser(description='Handle your lore')
-    subparsers = parser.add_subparsers(title='subcommands',
-                                       dest='command')
+    main_parser = argparse.ArgumentParser(description='Handle your lore')
+    subparsers = main_parser.add_subparsers(title='subcommands',
+                                            dest='command')
 
     add_parser = subparsers.add_parser("add")
     add_parser.add_argument('author')
@@ -65,103 +67,103 @@ def main():
     top_parser.add_argument('-n', '--num', help='limit number of loremasters',
                             type=int, default=10)
     # Parse the args and call whatever function was selected
-    args = parser.parse_args()
+    args = main_parser.parse_args()
 
     if args.command == "add":
-        add(db, args)
+        add(db, args.author, args.lore)
     elif args.command == "new":
-        new(db, args)
+        new(num=args.num)
     elif args.command == "dump":
-        dump(db, args)
+        dump(args.output_file)
     elif args.command == "search":
-        search(db, args)
+        search(args.pattern, author=args.author, num=args.num)
     elif args.command == "import":
-        import_lore(db, args)
+        import_lore(args.old_lore)
     elif args.command == "random":
-        random(db, args)
+        random(pattern=args.pattern)
     elif args.command == "top":
-        top(db, args)
+        top(num=args.num)
     else:
-        parser.print_help()
+        main_parser.print_help()
         sys.exit(1)
     sys.exit(0)
 
 
-def add(db, args):
-    t = datetime.datetime.now()
-
-    # Try to parse plain loreblob, extracting author from []
-    author = args.author
-    lore = ' '.join(args.lore)
+def add(db, author, lore):
+    now = datetime.datetime.now()
+    lore = ' '.join(lore)
 
     db.begin()
     # Check to see if lore already exists (based on author/lore match)
-    matches = Lore.select().where(
+    num_matches = Lore.select().where(
         Lore.author == author and Lore.lore == lore).count()
-    if matches == 0:
-        l = Lore.create(time=t, author=author, lore=lore, rating=0)
+    if num_matches == 0:
+        l = Lore.create(time=now, author=author, lore=lore, rating=0)
         print(l)
     else:
         print("Lore already exists...")
     db.commit()
 
 
-def new(db, args):
+def new(num=10):
     for lore in reversed(
-            Lore.select().order_by(Lore.time.desc()).limit(args.num)):
+            Lore.select().order_by(Lore.time.desc()).limit(num)):
         print(lore, '\n')
 
 
-def dump(db, args):
-    with open(args.output_file, 'w') as f:
+def dump(output_file):
+    with open(output_file, 'w') as f:
         for lore in reversed(
                 Lore.select().order_by(Lore.time.desc())):
             print(lore, file=f)
             print("", file=f)
 
 
-def search(db, args):
-    if args.author:
-        lores = Lore.select().where(Lore.author.contains(args.pattern))
+def search(pattern, author=False, num=10):
+    if author:
+        lores = Lore.select().where(Lore.author.contains(pattern))
     else:
-        lores = Lore.select().where(Lore.lore.contains(args.pattern))
-    lores = lores.order_by(Lore.time.desc()).limit(args.num)
+        lores = Lore.select().where(Lore.lore.contains(pattern))
+    lores = lores.order_by(Lore.time.desc()).limit(num)
 
     for lore in reversed(lores):
         print(lore, '\n')
 
 
-def import_lore(db, args):
+def import_lore(old_lore):
     try:
         Lore.create_table()
     except peewee.OperationalError:
         print("Lore table already exists")
 
-    with open(args.old_lore, newline='') as f:
+    with open(old_lore, newline='') as f:
         reader = csv.reader(f, delimiter='|')
         for row in reader:
-            # print(row)
             t_str = row[0]
             author = row[1]
             lore = row[2]
             try:
-                # 'Mon Sep 12 15:21:27 EDT 2016'
                 t = parser.parse(t_str)
-            except:
+            except ValueError:
                 t = None
             Lore.create(time=t, author=author, lore=lore, rating=0)
 
 
-def random(db, args):
-    pattern = ' '.join(args.pattern)
+def random(pattern=None):
+    if pattern is None:
+        pattern = []
+    pattern = ' '.join(pattern)
     lore = Lore.select().where(
         Lore.lore.contains(pattern)).order_by(peewee.fn.Random()).limit(1)
     for l in lore:
         print(l, '\n')
 
 
-def top(db, args):
-    lores = Lore.select(Lore.author, peewee.fn.Count(Lore.id).alias('count')).group_by(Lore.author).order_by(peewee.fn.Count(Lore.id).desc()).limit(args.num)
+def top(num=10):
+    lores = Lore.select(Lore.author, peewee.fn.Count(Lore.id).alias('count')).\
+        group_by(Lore.author).\
+        order_by(peewee.fn.Count(Lore.id).desc()).\
+        limit(num)
 
     col_size = max(len(l.author) for l in lores)
     for lore in lores:
