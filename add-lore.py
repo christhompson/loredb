@@ -9,6 +9,7 @@ New uses should go directly through loredb.py.
 import argparse
 import datetime
 from loredb import BaseModel, Lore
+import sys
 
 
 def main():
@@ -29,12 +30,15 @@ def main():
     db.begin()
     # Check to see if lore already exists (based on author/lore match)
     matches = Lore.select().where(
-        Lore.author == author and Lore.lore == lore).count()
+        Lore.author == author and Lore.lore == loretxt).count()
     if matches == 0:
         Lore.create(time=now, author=author, lore=loretxt, rating=0)
+        status = 0
     else:
         print("Lore already exists...")
+        status = 1
     db.commit()
+    sys.exit(status)
 
 
 if __name__ == "__main__":
