@@ -11,6 +11,8 @@ Lore funcionality is split into a set of subcommands:
  - `search`
  - `import`
  - `random`
+ - `update`
+ - `delete`
 
 ## Adding lore
 
@@ -64,3 +66,16 @@ This will search the lore for `pattern`. `-a` specifies you want to search by th
 
 This writes the lore to the `output_file`. Suitable for serving via the web, if desired.
 
+## Updating and deleting lore
+
+`loredb.py update timestamp author lore`
+
+This will update the author and/or lore of a single piece of lore with time
+matching `timestamp`.
+
+`loredb.py delete timestamp`
+
+This will delete a single piece of lore with time matching `timestamp`.
+
+Both `update` and `delete` will exit with an error if there is either no lore
+matching `timestamp` or more than one piece of lore that matches.

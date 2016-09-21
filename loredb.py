@@ -9,7 +9,7 @@ import argparse
 import datetime
 import csv
 import sys
-from dateutil import parser
+from dateutil import parser as datetime_parser
 import peewee
 
 
@@ -66,6 +66,15 @@ def main():
     top_parser = subparsers.add_parser("top")
     top_parser.add_argument('-n', '--num', help='limit number of loremasters',
                             type=int, default=10)
+
+    delete_parser = subparsers.add_parser("delete")
+    delete_parser.add_argument('timestamp', help='timestamp of lore to delete')
+
+    update_parser = subparsers.add_parser("update")
+    update_parser.add_argument('timestamp', help='timestamp of lore to update')
+    update_parser.add_argument('author', help='author of the lore')
+    update_parser.add_argument('lore', help='text of the lore')
+
     # Parse the args and call whatever function was selected
     args = main_parser.parse_args()
 
@@ -83,6 +92,10 @@ def main():
         random(pattern=args.pattern)
     elif args.command == "top":
         top(num=args.num)
+    elif args.command == "delete":
+        delete(args.timestamp)
+    elif args.command == "update":
+        update(args.timestamp, args.author, args.lore)
     else:
         main_parser.print_help()
         sys.exit(1)
@@ -101,7 +114,7 @@ def add(db, author, lore):
         l = Lore.create(time=now, author=author, lore=lore, rating=0)
         print(l)
     else:
-        print("Lore already exists...")
+        print("Lore already exists")
     db.commit()
 
 
@@ -143,7 +156,7 @@ def import_lore(old_lore):
             author = row[1]
             lore = row[2]
             try:
-                t = parser.parse(t_str)
+                t = datetime_parser.parse(t_str)
             except ValueError:
                 t = None
             Lore.create(time=t, author=author, lore=lore, rating=0)
@@ -171,6 +184,45 @@ def top(num=10):
             lore.author = "[blank]"
         print(lore.author.ljust(col_size), '\t', lore.count)
 
+
+def delete(timestamp):
+    try:
+        t = datetime_parser.parse(timestamp)
+    except ValueError as err:
+        print("Invalid timestamp:", err)
+        sys.exit(1)
+    num = Lore.select().where(Lore.time == t).count()
+    if num == 0:
+        print("No lore with timestamp")
+        sys.exit(1)
+    if num > 1:
+        print("Multiple pieces of lore matched timestamp")
+        sys.exit(1)
+
+    l = Lore.get(Lore.time == t)
+    rows_deleted = l.delete_instance()
+    print("Deleted %d lores" % rows_deleted)
+
+
+def update(timestamp, author, lore):
+    try:
+        t = datetime_parser.parse(timestamp)
+    except ValueError as err:
+        print("Invalid timestamp:", err)
+        sys.exit(1)
+    num = Lore.select().where(Lore.time == t).count()
+    if num == 0:
+        print("No lore with timestamp")
+        sys.exit(1)
+    if num > 1:
+        print("Multiple pieces of lore matched timestamp")
+        sys.exit(1)
+
+    l = Lore.get(Lore.time == t)
+    l.author = author
+    l.lore = lore
+    l.save()
+    print("Lore updated")
 
 if __name__ == "__main__":
     main()
