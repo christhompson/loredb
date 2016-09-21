@@ -70,11 +70,12 @@ This writes the lore to the `output_file`. Suitable for serving via the web, if 
 
 `loredb.py update timestamp author lore`
 
-This will update the author and/or lore of a single piece of lore matching `timestamp`.
+This will update the author and/or lore of a single piece of lore with time
+matching `timestamp`.
 
 `loredb.py delete timestamp`
 
-This will delete a single piece of lore matching `timestamp`.
+This will delete a single piece of lore with time matching `timestamp`.
 
 Both `update` and `delete` will exit with an error if there is either no lore
 matching `timestamp` or more than one piece of lore that matches.
