@@ -7,11 +7,6 @@ A tool for managing and querying a database of lore.
 
 import argparse
 import datetime
-
-
-
-
-
 import csv
 import sys
 from dateutil import parser as datetime_parser
@@ -137,8 +132,6 @@ def dump(output_file):
             print("", file=f)
 
 
-
-
 def search(pattern, author=False, num=10):
     if author:
         lores = Lore.select().where(Lore.author.contains(pattern))
@@ -147,7 +140,7 @@ def search(pattern, author=False, num=10):
     lores = lores.order_by(Lore.time.desc()).limit(num)
 
     for lore in reversed(lores):
-    print(lore, '\n')
+        print(lore, '\n')
 
 
 def import_lore(old_lore):
@@ -169,7 +162,7 @@ def import_lore(old_lore):
             Lore.create(time=t, author=author, lore=lore, rating=0)
 
 
-def Random(pattern = None):
+def random(pattern=None):
     if pattern is None:
         pattern = []
     pattern = ' '.join(pattern)
