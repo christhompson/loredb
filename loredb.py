@@ -185,17 +185,6 @@ def top(num=10):
         print(lore.author.ljust(col_size), '\t', lore.count)
 
 
-# def _num_lores(timestamp):
-#     lore = Lore.select(Lore.time == timestamp)
-#     matches = lore.count()
-#     if matches == 0:
-#         raise RuntimeError("No lore with timestamp")
-#     elif matches > 1:
-#         raise RuntimeError("Multiple pieces of lore matched timestmap")
-#     else:
-#         return lore
-
-
 def delete(timestamp):
     try:
         t = datetime_parser.parse(timestamp)
