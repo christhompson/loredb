@@ -26,7 +26,7 @@ class Lore(BaseModel):
     downvotes = peewee.IntegerField(null=False, default=10)
 
     def __str__(self):
-        return "[%s] [+1 %d / -1 %d] [%s]\n%s" % (self.time, self.upvotes, self.downvotes, self.author, self.lore)
+        return "[%s] [rating: %f] [%s]\n%s" % (self.time, compute_rating(self.upvotes, self.downvotes), self.author, self.lore)
 
 
 def main():
@@ -76,6 +76,12 @@ def main():
     update_parser.add_argument('author', help='author of the lore')
     update_parser.add_argument('lore', help='text of the lore')
 
+    upvote_parser = subparsers.add_parser("upvote")
+    upvote_parser.add_argument('timestamp', help='timestamp of lore to upvote')
+
+    downvote_parser = subparsers.add_parser("downvote")
+    downvote_parser.add_argument('timestamp', help='timestamp of lore to downvote')
+
     # Parse the args and call whatever function was selected
     args = main_parser.parse_args()
 
@@ -97,6 +103,10 @@ def main():
         delete(args.timestamp)
     elif args.command == "update":
         update(args.timestamp, args.author, args.lore)
+    elif args.command == "upvote":
+        upvote(args.timestamp)
+    elif args.command == "downvote":
+        downvote(args.timestamp)
     else:
         main_parser.print_help()
         sys.exit(1)
@@ -224,6 +234,37 @@ def update(timestamp, author, lore):
     l.lore = lore
     l.save()
     print("Lore updated")
+
+
+def vote(timestamp, which='up'):
+    try:
+        t = datetime_parser.parse(timestamp)
+    except ValueError as err:
+        print("Invalid timestamp:", err)
+        sys.exit(1)
+    num = Lore.select().where(Lore.time == t).count()
+    if num == 0:
+        print("No lore with timestamp")
+        sys.exit(1)
+    if num > 1:
+        print("Multiple pieces of lore matched timestamp")
+        sys.exit(1)
+    
+    l = Lore.get(Lore.time == t)
+    if which == 'up':
+        l.upvotes += 1
+    elif which == 'down':
+        l.downvotes += 1
+    else:
+        print("Invalid voting requested:", which)
+        sys.exit(1)
+    l.save()
+    print("Lore updated")
+
+
+def compute_rating(upvotes, downvotes):
+    return upvotes / (upvotes + downvotes)
+
 
 if __name__ == "__main__":
     main()
