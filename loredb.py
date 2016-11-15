@@ -22,10 +22,11 @@ class Lore(BaseModel):
     time = peewee.DateTimeField(null=True, index=True)
     author = peewee.CharField(null=True, index=True)
     lore = peewee.CharField()
-    rating = peewee.FloatField()
+    upvotes = peewee.IntegerField(null=False, default=4)
+    downvotes = peewee.IntegerField(null=False, default=10)
 
     def __str__(self):
-        return "[%s] [%s]\n%s" % (self.time, self.author, self.lore)
+        return "[%s] [+1 %d / -1 %d] [%s]\n%s" % (self.time, self.upvotes, self.downvotes, self.author, self.lore)
 
 
 def main():
