@@ -9,7 +9,6 @@ import argparse
 import datetime
 import csv
 import sys
-from dateutil import parser as datetime_parser
 import peewee
 
 
@@ -41,8 +40,8 @@ class Lore(BaseModel):
                                index=True)
 
     def __str__(self):
-        return "[%s] [rating: %.3f] [%s]\n%s" % (
-            self.time, self.rating, self.author, self.lore)
+        return "[#%d] [%s] [rating: %.3f] [%s]\n%s" % (
+            self.id, self.time, self.rating, self.author, self.lore)
 
 
 def main():
@@ -85,19 +84,19 @@ def main():
                             type=int, default=10)
 
     delete_parser = subparsers.add_parser("delete")
-    delete_parser.add_argument('timestamp', help='timestamp of lore to delete')
+    delete_parser.add_argument('id', help='id of lore to delete', type=int)
 
     update_parser = subparsers.add_parser("update")
-    update_parser.add_argument('timestamp', help='timestamp of lore to update')
+    update_parser.add_argument('id', help='id of lore to update', type=int)
     update_parser.add_argument('author', help='author of the lore')
     update_parser.add_argument('lore', help='text of the lore')
 
     upvote_parser = subparsers.add_parser("upvote")
-    upvote_parser.add_argument('timestamp', help='timestamp of lore to upvote')
+    upvote_parser.add_argument('id', help='id of lore to upvote', type=int)
 
     downvote_parser = subparsers.add_parser("downvote")
     downvote_parser.add_argument(
-        'timestamp', help='timestamp of lore to downvote')
+        'id', help='id of lore to downvote', type=int)
 
     best_parser = subparsers.add_parser("best")
     best_parser.add_argument('-n', '--num', help='number of lore to return',
@@ -121,13 +120,13 @@ def main():
     elif args.command == "top":
         top(num=args.num)
     elif args.command == "delete":
-        delete(args.timestamp)
+        delete(args.id)
     elif args.command == "update":
-        update(args.timestamp, args.author, args.lore)
+        update(args.id, args.author, args.lore)
     elif args.command == "upvote":
-        vote(args.timestamp, which='up')
+        vote(args.id, which='up')
     elif args.command == "downvote":
-        vote(args.timestamp, which='down')
+        vote(args.id, which='down')
     elif args.command == "best":
         best(num=args.num)
     else:
@@ -224,61 +223,37 @@ def best(num=10):
         print(lore, '\n')
 
 
-def delete(timestamp):
+def delete(id):
     try:
-        t = datetime_parser.parse(timestamp)
-    except ValueError as err:
-        print("Invalid timestamp:", err)
-        sys.exit(1)
-    num = Lore.select().where(Lore.time == t).count()
-    if num == 0:
-        print("No lore with timestamp")
-        sys.exit(1)
-    if num > 1:
-        print("Multiple pieces of lore matched timestamp")
+        l = Lore.get(Lore.id == id)
+    except peewee.DoesNotExist as err:
+        print("Invalid id:", err)
         sys.exit(1)
 
-    l = Lore.get(Lore.time == t)
     rows_deleted = l.delete_instance()
     print("Deleted %d lores" % rows_deleted)
 
 
-def update(timestamp, author, lore):
+def update(id, author, lore):
     try:
-        t = datetime_parser.parse(timestamp)
-    except ValueError as err:
-        print("Invalid timestamp:", err)
-        sys.exit(1)
-    num = Lore.select().where(Lore.time == t).count()
-    if num == 0:
-        print("No lore with timestamp")
-        sys.exit(1)
-    if num > 1:
-        print("Multiple pieces of lore matched timestamp")
+        l = Lore.get(Lore.id == id)
+    except peewee.DoesNotExist as err:
+        print("Invalid id:", err)
         sys.exit(1)
 
-    l = Lore.get(Lore.time == t)
     l.author = author
     l.lore = lore
     l.save()
     print("Lore updated")
 
 
-def vote(timestamp, which='up'):
+def vote(id, which='up'):
     try:
-        t = datetime_parser.parse(timestamp)
-    except ValueError as err:
-        print("Invalid timestamp:", err)
-        sys.exit(1)
-    num = Lore.select().where(Lore.time == t).count()
-    if num == 0:
-        print("No lore with timestamp")
-        sys.exit(1)
-    if num > 1:
-        print("Multiple pieces of lore matched timestamp")
+        l = Lore.get(Lore.id == id)
+    except peewee.DoesNotExist as err:
+        print("Invalid id:", err)
         sys.exit(1)
 
-    l = Lore.get(Lore.time == t)
     if which == 'up':
         l.upvotes += 1
     elif which == 'down':
