@@ -13,19 +13,36 @@ from dateutil import parser as datetime_parser
 import peewee
 
 
+def compute_rating(upvotes, downvotes):
+    return upvotes / (upvotes + downvotes)
+
+
 class BaseModel(peewee.Model):
     class Meta:
         database = peewee.SqliteDatabase(None)
 
 
 class Lore(BaseModel):
+    # Lore details
     time = peewee.DateTimeField(null=True, index=True)
     author = peewee.CharField(null=True, index=True)
     lore = peewee.CharField()
-    rating = peewee.FloatField()
+
+    # Bayesian priors for voting
+    fake_upvotes = 4
+    fake_downvotes = 10
+
+    # Voting
+    upvotes = peewee.IntegerField(null=False, default=fake_upvotes)
+    downvotes = peewee.IntegerField(null=False, default=fake_downvotes)
+    rating = peewee.FloatField(null=False,
+                               default=compute_rating(fake_upvotes,
+                                                      fake_downvotes),
+                               index=True)
 
     def __str__(self):
-        return "[%s] [%s]\n%s" % (self.time, self.author, self.lore)
+        return "[%s] [rating: %.3f] [%s]\n%s" % (
+            self.time, self.rating, self.author, self.lore)
 
 
 def main():
@@ -75,6 +92,17 @@ def main():
     update_parser.add_argument('author', help='author of the lore')
     update_parser.add_argument('lore', help='text of the lore')
 
+    upvote_parser = subparsers.add_parser("upvote")
+    upvote_parser.add_argument('timestamp', help='timestamp of lore to upvote')
+
+    downvote_parser = subparsers.add_parser("downvote")
+    downvote_parser.add_argument(
+        'timestamp', help='timestamp of lore to downvote')
+
+    best_parser = subparsers.add_parser("best")
+    best_parser.add_argument('-n', '--num', help='number of lore to return',
+                             type=int, default=10)
+
     # Parse the args and call whatever function was selected
     args = main_parser.parse_args()
 
@@ -96,6 +124,12 @@ def main():
         delete(args.timestamp)
     elif args.command == "update":
         update(args.timestamp, args.author, args.lore)
+    elif args.command == "upvote":
+        vote(args.timestamp, which='up')
+    elif args.command == "downvote":
+        vote(args.timestamp, which='down')
+    elif args.command == "best":
+        best(num=args.num)
     else:
         main_parser.print_help()
         sys.exit(1)
@@ -111,7 +145,7 @@ def add(db, author, lore):
     num_matches = Lore.select().where(
         Lore.author == author and Lore.lore == lore).count()
     if num_matches == 0:
-        l = Lore.create(time=now, author=author, lore=lore, rating=0)
+        l = Lore.create(time=now, author=author, lore=lore)
         print(l)
     else:
         print("Lore already exists")
@@ -159,7 +193,7 @@ def import_lore(old_lore):
                 t = datetime_parser.parse(t_str)
             except ValueError:
                 t = None
-            Lore.create(time=t, author=author, lore=lore, rating=0)
+            Lore.create(time=t, author=author, lore=lore)
 
 
 def random(pattern=None):
@@ -183,6 +217,11 @@ def top(num=10):
         if lore.author == "":
             lore.author = "[blank]"
         print(lore.author.ljust(col_size), '\t', lore.count)
+
+
+def best(num=10):
+    for lore in Lore.select().order_by(Lore.rating.desc()).limit(num):
+        print(lore, '\n')
 
 
 def delete(timestamp):
@@ -223,6 +262,35 @@ def update(timestamp, author, lore):
     l.lore = lore
     l.save()
     print("Lore updated")
+
+
+def vote(timestamp, which='up'):
+    try:
+        t = datetime_parser.parse(timestamp)
+    except ValueError as err:
+        print("Invalid timestamp:", err)
+        sys.exit(1)
+    num = Lore.select().where(Lore.time == t).count()
+    if num == 0:
+        print("No lore with timestamp")
+        sys.exit(1)
+    if num > 1:
+        print("Multiple pieces of lore matched timestamp")
+        sys.exit(1)
+
+    l = Lore.get(Lore.time == t)
+    if which == 'up':
+        l.upvotes += 1
+    elif which == 'down':
+        l.downvotes += 1
+    else:
+        print("Invalid voting requested:", which)
+        sys.exit(1)
+    # Update the lore rating
+    l.rating = compute_rating(l.upvotes, l.downvotes)
+    l.save()
+    print("Lore updated")
+
 
 if __name__ == "__main__":
     main()
