@@ -200,7 +200,7 @@ def random(pattern=None):
         pattern = []
     pattern = ' '.join(pattern)
     lore = Lore.select().where(
-        Lore.lore.contains(pattern)).order_by(peewee.fn.Random()).limit(1)
+          Lore.lore.contains(pattern)).order_by(peewee.fn.Random()).limit(1)
     for l in lore:
         print(l, '\n')
 
