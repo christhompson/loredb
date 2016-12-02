@@ -78,6 +78,8 @@ def main():
     random_parser = subparsers.add_parser("random")
     random_parser.add_argument("pattern", nargs='*',
                                help="plain text pattern to filter lore on")
+    random_parser.add_argument('-n', '--num', help='number of lore to return',
+                               type=int, default=1)
 
     top_parser = subparsers.add_parser("top")
     top_parser.add_argument('-n', '--num', help='limit number of loremasters',
@@ -116,7 +118,7 @@ def main():
     elif args.command == "import":
         import_lore(args.old_lore)
     elif args.command == "random":
-        random(pattern=args.pattern)
+        random(pattern=args.pattern, num=args.num)
     elif args.command == "top":
         top(num=args.num)
     elif args.command == "delete":
@@ -188,12 +190,12 @@ def import_lore(old_lore):
             Lore.create(time=t, author=author, lore=lore)
 
 
-def random(pattern=None):
+def random(pattern=None, num=1):
     if pattern is None:
         pattern = []
     pattern = ' '.join(pattern)
     lore = Lore.select().where(
-        Lore.lore.contains(pattern)).order_by(peewee.fn.Random()).limit(1)
+        Lore.lore.contains(pattern)).order_by(peewee.fn.Random()).limit(num)
     for l in lore:
         print(l, '\n')
 
