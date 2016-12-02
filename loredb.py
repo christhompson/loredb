@@ -138,16 +138,12 @@ def main():
 def add(db, author, lore):
     now = datetime.datetime.now()
     lore = ' '.join(lore)
-
     db.begin()
-    # Check to see if lore already exists (based on author/lore match)
-    num_matches = Lore.select().where(
-        Lore.author == author and Lore.lore == lore).count()
-    if num_matches == 0:
-        l = Lore.create(time=now, author=author, lore=lore)
-        print(l)
-    else:
-        print("Lore already exists")
+    lore, created = Lore.get_or_create(
+        author=author, lore=lore, defaults={'time': now})
+    if not created:
+        print("Lore already exists, upvoting")
+        vote(lore.id, which='up')
     db.commit()
 
 
