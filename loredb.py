@@ -106,7 +106,7 @@ def main():
     args = main_parser.parse_args()
 
     if args.command == "add":
-        add(db, args.author, args.lore)
+        add(args.author, args.lore)
     elif args.command == "new":
         new(num=args.num)
     elif args.command == "dump":
@@ -135,20 +135,13 @@ def main():
     sys.exit(0)
 
 
-def add(db, author, lore):
+def add(author, lore):
     now = datetime.datetime.now()
     lore = ' '.join(lore)
-
-    db.begin()
-    # Check to see if lore already exists (based on author/lore match)
-    num_matches = Lore.select().where(
-        Lore.author == author and Lore.lore == lore).count()
-    if num_matches == 0:
-        l = Lore.create(time=now, author=author, lore=lore)
-        print(l)
-    else:
-        print("Lore already exists")
-    db.commit()
+    lore, created = Lore.get_or_create(
+        author=author, lore=lore, defaults={'time': now})
+    if not created:
+        vote(lore.id, which='up')
 
 
 def new(num=10):
@@ -256,15 +249,16 @@ def vote(id, which='up'):
 
     if which == 'up':
         l.upvotes += 1
+        print("Lore upvoted")
     elif which == 'down':
         l.downvotes += 1
+        print("Lore downvoted")
     else:
         print("Invalid voting requested:", which)
         sys.exit(1)
     # Update the lore rating
     l.rating = compute_rating(l.upvotes, l.downvotes)
     l.save()
-    print("Lore updated")
 
 
 if __name__ == "__main__":
