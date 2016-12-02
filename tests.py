@@ -3,7 +3,7 @@ from playhouse.test_utils import test_database
 from peewee import SqliteDatabase
 from datetime import datetime, timedelta
 
-from loredb import BaseModel, Lore, compute_rating, vote
+from loredb import BaseModel, Lore, compute_rating, vote, add
 
 test_db = SqliteDatabase(':memory:')
 test_time = datetime.now()
@@ -68,6 +68,22 @@ class TestLoreVoting(TestCase):
             self.assertEqual(Lore.get(time=test_time).downvotes, 11)
             self.assertEqual(Lore.get(time=test_time).rating, 4 / 15)
 
+
+class TestAddLore(TestCase):
+    def test_add(self):
+        with test_database(test_db, (BaseModel, Lore)):
+            add("bob", ["lore 1"])
+            l = Lore.get(author="bob", lore="lore 1")
+            self.assertGreaterEqual(l.id, 0)
+            self.assertEqual(l.author, "bob")
+            self.assertEqual(l.lore, "lore 1")
+
+    def test_dupe_upvote(self):
+        with test_database(test_db, (BaseModel, Lore)):
+            add("bob", ["lore"])
+            add("bob", ["lore"])
+            l = Lore.get(author="bob", lore="lore")
+            self.assertEqual(l.upvotes, 5)
 
 if __name__ == '__main__':
     main()

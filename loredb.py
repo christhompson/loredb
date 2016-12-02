@@ -106,7 +106,7 @@ def main():
     args = main_parser.parse_args()
 
     if args.command == "add":
-        add(db, args.author, args.lore)
+        add(args.author, args.lore)
     elif args.command == "new":
         new(num=args.num)
     elif args.command == "dump":
@@ -135,15 +135,13 @@ def main():
     sys.exit(0)
 
 
-def add(db, author, lore):
+def add(author, lore):
     now = datetime.datetime.now()
     lore = ' '.join(lore)
-    db.begin()
     lore, created = Lore.get_or_create(
         author=author, lore=lore, defaults={'time': now})
     if not created:
         vote(lore.id, which='up')
-    db.commit()
 
 
 def new(num=10):
