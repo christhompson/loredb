@@ -142,7 +142,6 @@ def add(db, author, lore):
     lore, created = Lore.get_or_create(
         author=author, lore=lore, defaults={'time': now})
     if not created:
-        print("Lore already exists, upvoting")
         vote(lore.id, which='up')
     db.commit()
 
@@ -252,15 +251,16 @@ def vote(id, which='up'):
 
     if which == 'up':
         l.upvotes += 1
+        print("Lore upvoted")
     elif which == 'down':
         l.downvotes += 1
+        print("Lore downvoted")
     else:
         print("Invalid voting requested:", which)
         sys.exit(1)
     # Update the lore rating
     l.rating = compute_rating(l.upvotes, l.downvotes)
     l.save()
-    print("Lore updated")
 
 
 if __name__ == "__main__":
