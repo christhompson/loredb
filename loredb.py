@@ -49,8 +49,6 @@ def main():
     db = BaseModel._meta.database
     db.init(lore_file)
 
-    # command_functions = {}
-
     main_parser = argparse.ArgumentParser(description='Handle your lore')
     subparsers = main_parser.add_subparsers(title='subcommands',
                                             dest='command')
@@ -126,35 +124,6 @@ def main():
     else:
         args.func(args)
         sys.exit(0)
-
-    # if args.command == "add":
-    #     add(args.author, args.lore)
-    # elif args.command == "new":
-    #     new(num=args.num)
-    # elif args.command == "dump":
-    #     dump(args.output_file)
-    # elif args.command == "search":
-    #     search(args.pattern, author=args.author, num=args.num)
-    # elif args.command == "import":
-    #     import_lore(args.old_lore)
-    # elif args.command == "random":
-    #     random(pattern=args.pattern, num=args.num)
-    # elif args.command == "top":
-    #     top(num=args.num)
-    # elif args.command == "delete":
-    #     delete(args.id)
-    # elif args.command == "update":
-    #     update(args.id, args.author, args.lore)
-    # elif args.command == "upvote":
-    #     vote(args.id, which='up')
-    # elif args.command == "downvote":
-    #     vote(args.id, which='down')
-    # elif args.command == "best":
-    #     best(num=args.num)
-    # else:
-    #     main_parser.print_help()
-    #     sys.exit(1)
-    # sys.exit(0)
 
 
 def _add(args):
