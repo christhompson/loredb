@@ -53,88 +53,81 @@ def main():
     subparsers = main_parser.add_subparsers(title='subcommands',
                                             dest='command')
 
-    add_parser = subparsers.add_parser("add")
+    add_parser = subparsers.add_parser('add')
     add_parser.add_argument('author')
-    add_parser.add_argument('lore', nargs='+', help="blob of lore to save")
+    add_parser.add_argument('lore', nargs='+', help='blob of lore to save')
+    add_parser.set_defaults(func=_add)
 
-    new_parser = subparsers.add_parser("new")
-    new_parser.add_argument('-n', '--num', help="number of lore to return",
+    new_parser = subparsers.add_parser('new')
+    new_parser.add_argument('-n', '--num', help='number of lore to return',
                             type=int, default=10)
+    new_parser.set_defaults(func=_new)
 
-    dump_parser = subparsers.add_parser("dump")
-    dump_parser.add_argument('output_file', help="file to write lore to")
+    dump_parser = subparsers.add_parser('dump')
+    dump_parser.add_argument('output_file', help='file to write lore to')
+    dump_parser.set_defaults(func=_dump)
 
-    search_parser = subparsers.add_parser("search")
+    search_parser = subparsers.add_parser('search')
     search_parser.add_argument('-a', '--author',
-                               help="search on author instead",
+                               help='search on author instead',
                                default=False, action='store_true')
-    search_parser.add_argument('-n', '--num', help="number of lore to return",
+    search_parser.add_argument('-n', '--num', help='number of lore to return',
                                type=int, default=10)
     search_parser.add_argument('pattern')
+    search_parser.set_defaults(func=_search)
 
-    import_parser = subparsers.add_parser("import")
-    import_parser.add_argument('old_lore', help="csv file of old lore")
+    import_parser = subparsers.add_parser('import')
+    import_parser.add_argument('old_lore', help='csv file of old lore')
+    import_parser.set_defaults(func=_import_lore)
 
-    random_parser = subparsers.add_parser("random")
-    random_parser.add_argument("pattern", nargs='*',
-                               help="plain text pattern to filter lore on")
+    random_parser = subparsers.add_parser('random')
+    random_parser.add_argument('pattern', nargs='*',
+                               help='plain text pattern to filter lore on')
     random_parser.add_argument('-n', '--num', help='number of lore to return',
                                type=int, default=1)
+    random_parser.set_defaults(func=_random)
 
-    top_parser = subparsers.add_parser("top")
+    top_parser = subparsers.add_parser('top')
     top_parser.add_argument('-n', '--num', help='limit number of loremasters',
                             type=int, default=10)
+    top_parser.set_defaults(func=_top)
 
-    delete_parser = subparsers.add_parser("delete")
+    delete_parser = subparsers.add_parser('delete')
     delete_parser.add_argument('id', help='id of lore to delete', type=int)
+    delete_parser.set_defaults(func=_delete)
 
-    update_parser = subparsers.add_parser("update")
+    update_parser = subparsers.add_parser('update')
     update_parser.add_argument('id', help='id of lore to update', type=int)
     update_parser.add_argument('author', help='author of the lore')
     update_parser.add_argument('lore', help='text of the lore')
+    update_parser.set_defaults(func=_update)
 
-    upvote_parser = subparsers.add_parser("upvote")
+    upvote_parser = subparsers.add_parser('upvote')
     upvote_parser.add_argument('id', help='id of lore to upvote', type=int)
+    upvote_parser.set_defaults(func=_upvote)
 
-    downvote_parser = subparsers.add_parser("downvote")
+    downvote_parser = subparsers.add_parser('downvote')
     downvote_parser.add_argument(
         'id', help='id of lore to downvote', type=int)
+    downvote_parser.set_defaults(func=_downvote)
 
-    best_parser = subparsers.add_parser("best")
+    best_parser = subparsers.add_parser('best')
     best_parser.add_argument('-n', '--num', help='number of lore to return',
                              type=int, default=10)
+    best_parser.set_defaults(func=_best)
 
     # Parse the args and call whatever function was selected
     args = main_parser.parse_args()
-
-    if args.command == "add":
-        add(args.author, args.lore)
-    elif args.command == "new":
-        new(num=args.num)
-    elif args.command == "dump":
-        dump(args.output_file)
-    elif args.command == "search":
-        search(args.pattern, author=args.author, num=args.num)
-    elif args.command == "import":
-        import_lore(args.old_lore)
-    elif args.command == "random":
-        random(pattern=args.pattern, num=args.num)
-    elif args.command == "top":
-        top(num=args.num)
-    elif args.command == "delete":
-        delete(args.id)
-    elif args.command == "update":
-        update(args.id, args.author, args.lore)
-    elif args.command == "upvote":
-        vote(args.id, which='up')
-    elif args.command == "downvote":
-        vote(args.id, which='down')
-    elif args.command == "best":
-        best(num=args.num)
-    else:
+    if args.command is None:
         main_parser.print_help()
         sys.exit(1)
-    sys.exit(0)
+    else:
+        args.func(args)
+        sys.exit(0)
+
+
+def _add(args):
+    add(args.author, args.lore)
 
 
 def add(author, lore):
@@ -146,10 +139,18 @@ def add(author, lore):
         vote(lore.id, which='up')
 
 
+def _new(args):
+    new(num=args.num)
+
+
 def new(num=10):
     for lore in reversed(
             Lore.select().order_by(Lore.time.desc()).limit(num)):
         print(lore, '\n')
+
+
+def _dump(args):
+    dump(args.output_file)
 
 
 def dump(output_file):
@@ -158,6 +159,10 @@ def dump(output_file):
                 Lore.select().order_by(Lore.time.desc())):
             print(lore, file=f)
             print("", file=f)
+
+
+def _search(args):
+    search(args.pattern, author=args.author, num=args.num)
 
 
 def search(pattern, author=False, num=10):
@@ -169,6 +174,10 @@ def search(pattern, author=False, num=10):
 
     for lore in reversed(lores):
         print(lore, '\n')
+
+
+def _import_lore(args):
+    import_lore(args.old_lore)
 
 
 def import_lore(old_lore):
@@ -190,6 +199,10 @@ def import_lore(old_lore):
             Lore.create(time=t, author=author, lore=lore)
 
 
+def _random(args):
+    random(pattern=args.pattern, num=args.num)
+
+
 def random(pattern=None, num=1):
     if pattern is None:
         pattern = []
@@ -198,6 +211,10 @@ def random(pattern=None, num=1):
         Lore.lore.contains(pattern)).order_by(peewee.fn.Random()).limit(num)
     for l in lore:
         print(l, '\n')
+
+
+def _top(args):
+    top(num=args.num)
 
 
 def top(num=10):
@@ -213,9 +230,17 @@ def top(num=10):
         print(lore.author.ljust(col_size), '\t', lore.count)
 
 
+def _best(args):
+    best(num=args.num)
+
+
 def best(num=10):
     for lore in Lore.select().order_by(Lore.rating.desc()).limit(num):
         print(lore, '\n')
+
+
+def _delete(args):
+    delete(args.id)
 
 
 def delete(id):
@@ -229,6 +254,10 @@ def delete(id):
     print("Deleted %d lores" % rows_deleted)
 
 
+def _update(args):
+    update(args.id, args.author, args.lore)
+
+
 def update(id, author, lore):
     try:
         l = Lore.get(Lore.id == id)
@@ -240,6 +269,14 @@ def update(id, author, lore):
     l.lore = lore
     l.save()
     print("Lore updated")
+
+
+def _upvote(args):
+    vote(args.id, which='up')
+
+
+def _downvote(args):
+    vote(args.id, which='down')
 
 
 def vote(id, which='up'):
