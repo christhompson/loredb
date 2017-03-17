@@ -3,7 +3,8 @@ from playhouse.test_utils import test_database
 from peewee import SqliteDatabase
 from datetime import datetime, timedelta
 
-from loredb import BaseModel, Lore, compute_rating, upvote, downvote, add, get_top_lore
+from loredb import (BaseModel, Lore, compute_rating, upvote, downvote, add,
+                    get_top_lore)
 
 test_db = SqliteDatabase(':memory:')
 test_time = datetime.now()
@@ -105,13 +106,6 @@ class TestAddLore(TestCase):
 
 
 class TestTopLore(TestCase):
-    def create_test_data(self):
-        # Create some lore
-        for i in range(10):
-            t = test_time + timedelta(i*100)
-            lore = "lore #%d" % i
-            Lore.create(time=t, author=str(i), lore=lore)
-
     def test_top(self):
         with test_database(test_db, (BaseModel, Lore)):
             add("bob", ["lore"])
