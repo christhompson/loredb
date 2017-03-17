@@ -103,13 +103,13 @@ def main():
     update_parser.set_defaults(func=_update)
 
     upvote_parser = subparsers.add_parser('upvote')
-    upvote_parser.add_argument('id', nargs='+', help='id of lore(s) to upvote',
-                               type=int)
+    upvote_parser.add_argument('id', nargs='+', type=int,
+                               help='id of lore(s) to upvote')
     upvote_parser.set_defaults(func=_upvote)
 
     downvote_parser = subparsers.add_parser('downvote')
-    downvote_parser.add_argument('id', nargs='+', help='id of lore to downvote',
-                                 type=int)
+    downvote_parser.add_argument('id', nargs='+', type=int,
+                                 help='id of lore to downvote')
     downvote_parser.set_defaults(func=_downvote)
 
     best_parser = subparsers.add_parser('best')

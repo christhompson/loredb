@@ -2,7 +2,6 @@ from unittest import TestCase, main
 from playhouse.test_utils import test_database
 from peewee import SqliteDatabase
 from datetime import datetime, timedelta
-from collections import namedtuple
 
 from loredb import BaseModel, Lore, compute_rating, upvote, downvote, add
 
