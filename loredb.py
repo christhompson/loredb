@@ -218,16 +218,37 @@ def _top(args):
 
 
 def top(num=10):
-    lores = Lore.select(Lore.author, peewee.fn.Count(Lore.id).alias('count')).\
-        group_by(Lore.author).\
-        order_by(peewee.fn.Count(Lore.id).desc()).\
-        limit(num)
+    lores = get_top_lore(num)
 
-    col_size = max(len(l.author) for l in lores)
+    col1_size = max(max(len(l.author) for l in lores), len("Author"))
+    col2_size = max(max(len(str(l.count)) for l in lores), len("# Lore"))
+    col3_size = max(max(len("{:.3f}".format(l.total)) for l in lores),
+                    len("Score"))
+
+    pretty_print_fmt = "{:{size1}}\t{:>{size2}}\t{:>{size3}}"
+    print(pretty_print_fmt.format(
+        "AUTHOR", "# LORE", "SCORE",
+        size1=col1_size, size2=col2_size, size3=col3_size
+    ))
     for lore in lores:
         if lore.author == "":
             lore.author = "[blank]"
-        print(lore.author.ljust(col_size), '\t', lore.count)
+        print(pretty_print_fmt.format(
+            lore.author, lore.count, "{:.3f}".format(lore.total),
+            size1=col1_size, size2=col2_size, size3=col3_size
+        ))
+
+
+def get_top_lore(num=10):
+        # Order authors by Sum(rating), dropping downvoted lores.
+    cutoff_rating = 4.0 / 16.0  # Downvoted >= 2 times
+    return Lore.select(Lore.author,
+                       peewee.fn.Count(Lore.id).alias('count'),
+                       peewee.fn.Sum(Lore.rating).alias('total')).\
+        where(Lore.rating > cutoff_rating).\
+        group_by(peewee.fn.Lower(Lore.author)).\
+        order_by(peewee.fn.Sum(Lore.rating).desc()).\
+        limit(num)
 
 
 def _best(args):
