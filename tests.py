@@ -3,7 +3,8 @@ from playhouse.test_utils import test_database
 from peewee import SqliteDatabase
 from datetime import datetime, timedelta
 
-from loredb import BaseModel, Lore, compute_rating, upvote, downvote, add
+from loredb import (BaseModel, Lore, compute_rating, upvote, downvote, add,
+                    get_top_lore)
 
 test_db = SqliteDatabase(':memory:')
 test_time = datetime.now()
@@ -102,6 +103,26 @@ class TestAddLore(TestCase):
             add("bob", ["lore"])
             l = Lore.get(author="bob", lore="lore")
             self.assertEqual(l.upvotes, 5)
+
+
+class TestTopLore(TestCase):
+    def test_top(self):
+        with test_database(test_db, (BaseModel, Lore)):
+            add("bob", ["lore"])
+            upvote([1])
+            lores = get_top_lore(num=1)
+            self.assertEqual(lores.get().author, "bob")
+
+    def test_top_filtering_downvotes(self):
+        with test_database(test_db, (BaseModel, Lore)):
+            add("bob", ["lore"])
+            add("alice", ["bad lore"])
+            downvote([2])
+            downvote([2])
+            lores = get_top_lore(num=2)
+            # Alice no longer has lore that shows up after filtering
+            self.assertEqual(len(lores), 1)
+
 
 if __name__ == '__main__':
     main()
