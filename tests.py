@@ -3,8 +3,8 @@ from playhouse.test_utils import test_database
 from peewee import SqliteDatabase
 from datetime import datetime, timedelta
 
-from loredb import (BaseModel, Lore, compute_rating, upvote, downvote, add,
-                    get_top_lore)
+from loredb import (BaseModel, Tag, Lore, LoreTag, compute_rating, upvote,
+                    downvote, add, get_top_lore, add_tags)
 
 test_db = SqliteDatabase(':memory:')
 test_time = datetime.now()
@@ -122,6 +122,22 @@ class TestTopLore(TestCase):
             lores = get_top_lore(num=2)
             # Alice no longer has lore that shows up after filtering
             self.assertEqual(len(lores), 1)
+
+
+class TestTags(TestCase):
+    def test_tag(self):
+        with test_database(test_db, (BaseModel, Lore, Tag, LoreTag)):
+            tag = Tag.create(name="lasagna")
+            lore = Lore.create(author="bob", lore="some lore")
+            lore.tags.add(tag)
+            self.assertEqual(lore.tags[0].name, "lasagna")
+
+    def test_add_tag(self):
+        with test_database(test_db, (BaseModel, Lore, Tag, LoreTag)):
+            add("bob", ["lore"])
+            add_tags(1, ["lasagna"])
+            l = Lore.get(author="bob", lore="lore")
+            self.assertIn("lasagna", [str(t) for t in l.tags])
 
 
 if __name__ == '__main__':
