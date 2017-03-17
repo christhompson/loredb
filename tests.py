@@ -2,8 +2,9 @@ from unittest import TestCase, main
 from playhouse.test_utils import test_database
 from peewee import SqliteDatabase
 from datetime import datetime, timedelta
+from collections import namedtuple
 
-from loredb import BaseModel, Lore, compute_rating, vote, add
+from loredb import BaseModel, Lore, compute_rating, upvote, downvote, add
 
 test_db = SqliteDatabase(':memory:')
 test_time = datetime.now()
@@ -57,16 +58,34 @@ class TestLoreVoting(TestCase):
     def test_upvote(self):
         with test_database(test_db, (BaseModel, Lore)):
             self.create_test_data()
-            vote(1, which='up')
-            self.assertEqual(Lore.get(time=test_time).upvotes, 5)
-            self.assertEqual(Lore.get(time=test_time).rating, 5 / 15)
+            upvote([1])
+            self.assertEqual(Lore.get(id=1).upvotes, 5)
+            self.assertEqual(Lore.get(id=1).rating, 5 / 15)
 
     def test_downvote(self):
         with test_database(test_db, (BaseModel, Lore)):
             self.create_test_data()
-            vote(1, which='down')
-            self.assertEqual(Lore.get(time=test_time).downvotes, 11)
-            self.assertEqual(Lore.get(time=test_time).rating, 4 / 15)
+            downvote([1])
+            self.assertEqual(Lore.get(id=1).downvotes, 11)
+            self.assertEqual(Lore.get(id=1).rating, 4 / 15)
+
+    def test_multi_upvote(self):
+        with test_database(test_db, (BaseModel, Lore)):
+            self.create_test_data()
+            upvote([1, 2])
+            self.assertEqual(Lore.get(id=1).upvotes, 5)
+            self.assertEqual(Lore.get(id=1).rating, 5 / 15)
+            self.assertEqual(Lore.get(id=2).upvotes, 5)
+            self.assertEqual(Lore.get(id=2).rating, 5 / 15)
+
+    def test_multi_downvote(self):
+        with test_database(test_db, (BaseModel, Lore)):
+            self.create_test_data()
+            downvote([1, 2])
+            self.assertEqual(Lore.get(id=1).downvotes, 11)
+            self.assertEqual(Lore.get(id=1).rating, 4 / 15)
+            self.assertEqual(Lore.get(id=2).downvotes, 11)
+            self.assertEqual(Lore.get(id=2).rating, 4 / 15)
 
 
 class TestAddLore(TestCase):

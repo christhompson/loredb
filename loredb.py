@@ -103,12 +103,13 @@ def main():
     update_parser.set_defaults(func=_update)
 
     upvote_parser = subparsers.add_parser('upvote')
-    upvote_parser.add_argument('id', help='id of lore to upvote', type=int)
+    upvote_parser.add_argument('id', nargs='+', help='id of lore(s) to upvote',
+                               type=int)
     upvote_parser.set_defaults(func=_upvote)
 
     downvote_parser = subparsers.add_parser('downvote')
-    downvote_parser.add_argument(
-        'id', help='id of lore to downvote', type=int)
+    downvote_parser.add_argument('id', nargs='+', help='id of lore to downvote',
+                                 type=int)
     downvote_parser.set_defaults(func=_downvote)
 
     best_parser = subparsers.add_parser('best')
@@ -136,7 +137,7 @@ def add(author, lore):
     lore, created = Lore.get_or_create(
         author=author, lore=lore, defaults={'time': now})
     if not created:
-        vote(lore.id, which='up')
+        upvote([lore.id])
 
 
 def _new(args):
@@ -272,32 +273,39 @@ def update(id, author, lore):
 
 
 def _upvote(args):
-    vote(args.id, which='up')
+    upvote(args.id)
+
+
+def upvote(ids):
+    for id in ids:
+        try:
+            l = Lore.get(Lore.id == id)
+        except peewee.DoesNotExist as err:
+            print("Invalid id:", err)
+            sys.exit(1)
+        l.upvotes += 1
+        print("Lore upvoted")
+        # Update the lore rating
+        l.rating = compute_rating(l.upvotes, l.downvotes)
+        l.save()
 
 
 def _downvote(args):
-    vote(args.id, which='down')
+    downvote(args.id)
 
 
-def vote(id, which='up'):
-    try:
-        l = Lore.get(Lore.id == id)
-    except peewee.DoesNotExist as err:
-        print("Invalid id:", err)
-        sys.exit(1)
-
-    if which == 'up':
-        l.upvotes += 1
-        print("Lore upvoted")
-    elif which == 'down':
+def downvote(ids):
+    for id in ids:
+        try:
+            l = Lore.get(Lore.id == id)
+        except peewee.DoesNotExist as err:
+            print("Invalid id:", err)
+            sys.exit(1)
         l.downvotes += 1
         print("Lore downvoted")
-    else:
-        print("Invalid voting requested:", which)
-        sys.exit(1)
-    # Update the lore rating
-    l.rating = compute_rating(l.upvotes, l.downvotes)
-    l.save()
+        # Update the lore rating
+        l.rating = compute_rating(l.upvotes, l.downvotes)
+        l.save()
 
 
 if __name__ == "__main__":
