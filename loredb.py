@@ -10,6 +10,7 @@ import datetime
 import csv
 import sys
 import peewee
+from playhouse.fields import ManyToManyField
 
 
 def compute_rating(upvotes, downvotes):
@@ -40,8 +41,21 @@ class Lore(BaseModel):
                                index=True)
 
     def __str__(self):
-        return "[#%d] [%s] [rating: %.3f] [%s]\n%s" % (
-            self.id, self.time, self.rating, self.author, self.lore)
+        return "[#%d] [%s] [rating: %.3f] [%s]\nTags: %s\n%s" % (
+            self.id, self.time, self.rating, self.author,
+            ', '.join([str(tag) for tag in self.tags]),
+            self.lore)
+
+
+class Tag(BaseModel):
+    name = peewee.CharField(index=True)
+    lores = ManyToManyField(Lore, related_name="tags")
+
+    def __str__(self):
+        return self.name
+
+
+LoreTag = Tag.lores.get_through_model()
 
 
 def main():
@@ -116,6 +130,11 @@ def main():
     best_parser.add_argument('-n', '--num', help='number of lore to return',
                              type=int, default=10)
     best_parser.set_defaults(func=_best)
+
+    tag_parser = subparsers.add_parser('tag')
+    tag_parser.add_argument('id', type=int, help='id of lore to tag')
+    tag_parser.add_argument('tags', nargs='+', help='tags to apply to lore')
+    tag_parser.set_defaults(func=_add_tags)
 
     # Parse the args and call whatever function was selected
     args = main_parser.parse_args()
@@ -327,6 +346,21 @@ def downvote(ids):
         # Update the lore rating
         l.rating = compute_rating(l.upvotes, l.downvotes)
         l.save()
+
+
+def _add_tags(args):
+    add_tags(args.id, args.tags)
+
+
+def add_tags(id, tags):
+    try:
+        l = Lore.get(Lore.id == id)
+    except peewee.DoesNotExist as err:
+        print("Invalid id:", err)
+        sys.exit(1)
+    for tag in tags:
+        tag, _ = Tag.get_or_create(name=tag)
+        l.tags.add(tag)
 
 
 if __name__ == "__main__":
