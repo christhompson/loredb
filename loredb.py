@@ -358,9 +358,9 @@ def _add_tags(args):
     add_tags(args.id, args.tags)
 
 
-def add_tags(id, tags):
+def add_tags(lore_id, tags):
     try:
-        l = Lore.get(Lore.id == id)
+        l = Lore.get(Lore.id == lore_id)
     except peewee.DoesNotExist as err:
         print("Invalid id:", err)
         sys.exit(1)
