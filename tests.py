@@ -52,27 +52,27 @@ class TestLoreVoting(TestCase):
     def test_initial_rating(self):
         # Setup
         with test_database(test_db, (BaseModel, Lore)):
-            self.create_test_data()
+            create_test_data()
             self.assertEqual(Lore.get(time=test_time).lore, "lore #0")
             self.assertEqual(Lore.get(time=test_time).rating, 4 / 14)
 
     def test_upvote(self):
         with test_database(test_db, (BaseModel, Lore)):
-            self.create_test_data()
+            create_test_data()
             upvote([1])
             self.assertEqual(Lore.get(id=1).upvotes, 5)
             self.assertEqual(Lore.get(id=1).rating, 5 / 15)
 
     def test_downvote(self):
         with test_database(test_db, (BaseModel, Lore)):
-            self.create_test_data()
+            create_test_data()
             downvote([1])
             self.assertEqual(Lore.get(id=1).downvotes, 11)
             self.assertEqual(Lore.get(id=1).rating, 4 / 15)
 
     def test_multi_upvote(self):
         with test_database(test_db, (BaseModel, Lore)):
-            self.create_test_data()
+            create_test_data()
             upvote([1, 2])
             self.assertEqual(Lore.get(id=1).upvotes, 5)
             self.assertEqual(Lore.get(id=1).rating, 5 / 15)
@@ -81,7 +81,7 @@ class TestLoreVoting(TestCase):
 
     def test_multi_downvote(self):
         with test_database(test_db, (BaseModel, Lore)):
-            self.create_test_data()
+            create_test_data()
             downvote([1, 2])
             self.assertEqual(Lore.get(id=1).downvotes, 11)
             self.assertEqual(Lore.get(id=1).rating, 4 / 15)
