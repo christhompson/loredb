@@ -10,6 +10,14 @@ test_db = SqliteDatabase(':memory:')
 test_time = datetime.now()
 
 
+def create_test_data():
+    # Create some lore
+    for i in range(10):
+        t = test_time + timedelta(i*100)
+        lore = "lore #%d" % i
+        Lore.create(time=t, author=str(i), lore=lore)
+
+
 class TestFunctions(TestCase):
     def test_compute_rating(self):
         upvotes = 5
@@ -40,13 +48,6 @@ class TestLoreVoting(TestCase):
     # Bayesian priors
     # fake_upvotes = 4
     # fake_downvotes = 10
-
-    def create_test_data(self):
-        # Create some lore
-        for i in range(10):
-            t = test_time + timedelta(i*100)
-            lore = "lore #%d" % i
-            Lore.create(time=t, author=str(i), lore=lore)
 
     def test_initial_rating(self):
         # Setup

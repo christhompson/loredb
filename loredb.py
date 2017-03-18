@@ -296,9 +296,9 @@ def _delete(args):
     delete(args.id)
 
 
-def delete(id):
+def delete(lore_id):
     try:
-        l = Lore.get(Lore.id == id)
+        l = Lore.get(Lore.id == lore_id)
     except peewee.DoesNotExist as err:
         print("Invalid id:", err)
         sys.exit(1)
@@ -311,9 +311,9 @@ def _update(args):
     update(args.id, args.author, args.lore)
 
 
-def update(id, author, lore):
+def update(lore_id, author, lore):
     try:
-        l = Lore.get(Lore.id == id)
+        l = Lore.get(Lore.id == lore_id)
     except peewee.DoesNotExist as err:
         print("Invalid id:", err)
         sys.exit(1)
@@ -328,10 +328,10 @@ def _upvote(args):
     upvote(args.id)
 
 
-def upvote(ids):
-    for id in ids:
+def upvote(lore_ids):
+    for lore_id in lore_ids:
         try:
-            l = Lore.get(Lore.id == id)
+            l = Lore.get(Lore.id == lore_id)
         except peewee.DoesNotExist as err:
             print("Invalid id:", err)
             sys.exit(1)
