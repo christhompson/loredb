@@ -346,10 +346,10 @@ def _downvote(args):
     downvote(args.id)
 
 
-def downvote(ids):
-    for id in ids:
+def downvote(lore_ids):
+    for lore_id in lore_ids:
         try:
-            l = Lore.get(Lore.id == id)
+            l = Lore.get(Lore.id == lore_id)
         except peewee.DoesNotExist as err:
             print("Invalid id:", err)
             sys.exit(1)
