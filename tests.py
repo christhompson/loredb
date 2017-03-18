@@ -4,7 +4,7 @@ from peewee import SqliteDatabase
 from datetime import datetime, timedelta
 
 from loredb import (BaseModel, Tag, Lore, LoreTag, compute_rating, upvote,
-                    downvote, add, get_top_lore, add_tags)
+                    downvote, add, get_top_lore, add_tags, remove_tag)
 
 test_db = SqliteDatabase(':memory:')
 test_time = datetime.now()
@@ -138,6 +138,14 @@ class TestTags(TestCase):
             add_tags(1, ["lasagna"])
             l = Lore.get(author="bob", lore="lore")
             self.assertIn("lasagna", [str(t) for t in l.tags])
+
+    def test_remove_tag(self):
+        with test_database(test_db, (BaseModel, Lore, Tag, LoreTag)):
+            add("bob", ["lore"])
+            add_tags(1, ["lasagna"])
+            remove_tag(1, "lasagna")
+            l = Lore.get(author="bob", lore="lore")
+            self.assertNotIn("lasagna", [str(t) for t in l.tags])
 
 
 if __name__ == '__main__':

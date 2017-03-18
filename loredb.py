@@ -142,6 +142,12 @@ def main():
                                 type=int, default=10)
     get_tag_parser.set_defaults(func=_get_tag)
 
+    remove_tag_parser = subparsers.add_parser('delete-tag')
+    remove_tag_parser.add_argument('id', type=int,
+                                   help='id of lore to remove tag from')
+    remove_tag_parser.add_argument('tag', help='tag to remove')
+    remove_tag_parser.set_defaults(func=_remove_tag)
+
     # Parse the args and call whatever function was selected
     args = main_parser.parse_args()
     if args.command is None:
@@ -382,6 +388,20 @@ def get_tag(tag, num=10):
         sys.exit(1)
     for lore in t.lores.limit(num):
         print(lore, '\n')
+
+
+def _remove_tag(args):
+    remove_tag(args.id, args.tag)
+
+
+def remove_tag(lore_id, tag):
+    try:
+        l = Lore.get(Lore.id == lore_id)
+        t = Tag.get(Tag.name == tag)
+    except peewee.DoesNotExist as err:
+        print("Invalid id or tag:", err)
+        sys.exit(1)
+    l.tags.remove(t)
 
 
 if __name__ == "__main__":
